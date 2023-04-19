@@ -7,6 +7,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import javax.swing.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Checkout extends JFrame {
     JPanel panel = new JPanel();
@@ -54,21 +58,18 @@ public class Checkout extends JFrame {
     }
 
     public boolean removeReservation(String name, String room) {
+        String filePath = "reservations.csv";
+        File file = new File(filePath);
         try {
-            File file = new File("reservations.txt");
-            File tempFile = new File("temp.txt");
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-            String lineToRemove = name + "," + room;
-            String currentLine;
-            while ((currentLine = reader.readLine()) != null) {
-                String trimmedLine = currentLine.trim();
-                if (trimmedLine.equals(lineToRemove)) continue;
-                writer.write(currentLine + System.getProperty("line.separator"));
+            List<String> out = Files.lines(file.toPath())
+                    .filter(line -> !(line.contains(name) && line.contains(room)))
+                    .collect(Collectors.toList());
+            FileWriter writer = new FileWriter(filePath);
+            for (String line : out) {
+                writer.write(line + System.lineSeparator());
             }
             writer.close();
-            reader.close();
-            return tempFile.renameTo(file);
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
